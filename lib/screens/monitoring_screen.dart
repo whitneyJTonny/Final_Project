@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 import '../widgets/bottom_nav_bar.dart';
 
+
 class MonitoringScreen extends StatefulWidget {
   const MonitoringScreen({super.key});
 

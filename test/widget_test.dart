@@ -13,7 +13,8 @@ import 'package:flutter_application_3/main.dart';
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const SolarM7App());
+    // FIX: Changed SolarM7App to MyApp to match the class in main.dart
+   await tester.pumpWidget(const SolarApp()); 
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);

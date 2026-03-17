@@ -1,111 +1,88 @@
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
+// IMPORT ALL SCREENS HERE
+import '../screens/home_screen.dart';
+import '../screens/monitoring_screen.dart';
+import '../screens/analytics_screen.dart';
+import '../screens/settings_screen.dart';
 
 class BottomNavBar extends StatelessWidget {
   final int currentIndex;
 
-  const BottomNavBar({
-    super.key,
-    required this.currentIndex,
-  });
+  const BottomNavBar({super.key, required this.currentIndex});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardBg,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
+        color: Colors.white,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 20,
+            blurRadius: 10,
             offset: const Offset(0, -5),
           ),
         ],
       ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildNavItem(
-                context,
-                0,
-                '🏠',
-                'Home',
-                '/home',
-              ),
-              _buildNavItem(
-                context,
-                1,
-                '📊',
-                'Monitor',
-                '/monitoring',
-              ),
-              _buildNavItem(
-                context,
-                2,
-                '📈',
-                'Analytics',
-                '/analytics',
-              ),
-              _buildNavItem(
-                context,
-                3,
-                '⚙️',
-                'Settings',
-                '/settings',
-              ),
-            ],
+      child: NavigationBar(
+        selectedIndex: currentIndex,
+        onDestinationSelected: (index) {
+          // If user taps the current tab, do nothing
+          if (index == currentIndex) return;
+
+          Widget targetScreen;
+
+          // SELECT THE SCREEN BASED ON INDEX
+          switch (index) {
+            case 0:
+              targetScreen = const HomeScreen();
+              break;
+            case 1:
+              targetScreen = const MonitoringScreen();
+              break;
+            case 2:
+              targetScreen = const AnalyticsScreen();
+              break;
+            case 3:
+              targetScreen = const SettingsScreen();
+              break;
+            default:
+              targetScreen = const HomeScreen();
+          }
+
+          // NAVIGATE DIRECTLY TO THE SCREEN
+          // pushAndRemoveUntil clears the back stack so the Back button closes the app
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => targetScreen),
+            (route) => false,
+          );
+        },
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        indicatorColor: AppColors.primaryYellow.withValues(alpha: 0.2),
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Home',
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem(
-    BuildContext context,
-    int index,
-    String icon,
-    String label,
-    String route,
-  ) {
-    final isActive = currentIndex == index;
-
-    return GestureDetector(
-      onTap: () {
-        if (!isActive) {
-          Navigator.pushReplacementNamed(context, route);
-        }
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              icon,
-              style: TextStyle(
-                fontSize: isActive ? 26 : 24,
-                color: isActive
-                    ? AppColors.primaryYellow
-                    : AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
-                color: isActive
-                    ? AppColors.primaryDark
-                    : AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
+          NavigationDestination(
+            icon: Icon(Icons.monitor_heart_outlined),
+            selectedIcon: Icon(Icons.monitor_heart),
+            label: 'Monitor',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.analytics_outlined),
+            selectedIcon: Icon(Icons.analytics),
+            label: 'Analytics',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.settings_outlined),
+            selectedIcon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+        ],
       ),
     );
   }
