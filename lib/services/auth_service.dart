@@ -6,31 +6,35 @@ import '../main.dart';
 class AuthService {
   final ApiClient _apiClient = ApiClient();
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // LOGIN
+  // ─────────────────────────────────────────────────────────────────────────
   Future<bool> login(String email, String password) async {
     try {
       final response = await _apiClient.post('/auth/login/', {
-        'username': email,
+        'username': email, // simplejwt expects 'username'; we set username=email at registration
         'password': password,
       });
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final access = data['access'];
-        final refresh = data['refresh'];
-        await _apiClient.saveTokens(access, refresh);
-
-        // Fetch User Profile details to customize user session
+        await _apiClient.saveTokens(data['access'], data['refresh']);
         return await fetchAndSetProfile();
       } else {
         final data = jsonDecode(response.body);
-        throw Exception(data['detail'] ?? 'Login failed. Invalid credentials.');
+        final msg = data['detail'] ?? data['error'] ?? 'Login failed. Check your credentials.';
+        throw Exception(msg);
       }
     } catch (e) {
       rethrow;
     }
   }
 
-  Future<bool> register(String name, String email, String password, {String phone = ''}) async {
+  // ─────────────────────────────────────────────────────────────────────────
+  // REGISTER
+  // ─────────────────────────────────────────────────────────────────────────
+  Future<bool> register(String name, String email, String password,
+      {String phone = ''}) async {
     try {
       final response = await _apiClient.post('/auth/register/', {
         'first_name': name,
@@ -41,11 +45,10 @@ class AuthService {
 
       if (response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        final access = data['tokens']['access'];
-        final refresh = data['tokens']['refresh'];
-        await _apiClient.saveTokens(access, refresh);
-
-        // Assign global session details directly
+        await _apiClient.saveTokens(
+          data['tokens']['access'],
+          data['tokens']['refresh'],
+        );
         final userData = data['user'];
         userNameNotifier.value = userData['first_name'] ?? name;
         userEmailNotifier.value = userData['email'] ?? email;
@@ -53,7 +56,6 @@ class AuthService {
         return true;
       } else {
         final body = jsonDecode(response.body);
-        // Extract field errors if available
         String errorMsg = 'Registration failed.';
         if (body is Map) {
           if (body.containsKey('email')) {
@@ -73,6 +75,9 @@ class AuthService {
     }
   }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // FETCH & SET PROFILE
+  // ─────────────────────────────────────────────────────────────────────────
   Future<bool> fetchAndSetProfile() async {
     try {
       final response = await _apiClient.get('/auth/profile/');
@@ -89,6 +94,9 @@ class AuthService {
     return false;
   }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // LOGOUT
+  // ─────────────────────────────────────────────────────────────────────────
   Future<void> logout() async {
     await _apiClient.clearTokens();
     userNameNotifier.value = '';
@@ -96,34 +104,61 @@ class AuthService {
     isGuestNotifier.value = false;
   }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // FORGOT PASSWORD — Step 1: Send OTP to email
+  // ─────────────────────────────────────────────────────────────────────────
   Future<bool> forgotPassword(String email) async {
     try {
       final response = await _apiClient.post('/auth/forgot-password/', {
-        'email': email,
+        'email': email.trim().toLowerCase(),
       });
       if (response.statusCode == 200) {
         return true;
       } else {
         final data = jsonDecode(response.body);
-        throw Exception(data['error'] ?? 'Forgot password request failed.');
+        throw Exception(data['error'] ?? 'Could not send OTP. Please try again.');
       }
     } catch (e) {
       rethrow;
     }
   }
 
-  Future<bool> resetPassword(String email, String otp, String newPassword) async {
+  // ─────────────────────────────────────────────────────────────────────────
+  // VERIFY OTP — Step 2 (optional standalone check)
+  // ─────────────────────────────────────────────────────────────────────────
+  Future<bool> verifyOtp(String email, String otp) async {
+    try {
+      final response = await _apiClient.post('/auth/verify-otp/', {
+        'email': email.trim().toLowerCase(),
+        'otp': otp.trim(),
+      });
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        final data = jsonDecode(response.body);
+        throw Exception(data['error'] ?? 'Invalid OTP. Please try again.');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // RESET PASSWORD — Step 3: OTP + new password
+  // ─────────────────────────────────────────────────────────────────────────
+  Future<bool> resetPassword(
+      String email, String otp, String newPassword) async {
     try {
       final response = await _apiClient.post('/auth/reset-password/', {
-        'email': email,
-        'otp': otp,
+        'email': email.trim().toLowerCase(),
+        'otp': otp.trim(),
         'password': newPassword,
       });
       if (response.statusCode == 200) {
         return true;
       } else {
         final data = jsonDecode(response.body);
-        throw Exception(data['message'] ?? 'Password reset failed.');
+        throw Exception(data['error'] ?? 'Password reset failed. Please try again.');
       }
     } catch (e) {
       rethrow;

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
-import 'home_screen.dart'; 
-import 'login_screen.dart';    // FIXED: Added import
-import 'register_screen.dart'; // FIXED: Added import
+import 'home_screen.dart';
+import 'login_screen.dart';
+import 'register_screen.dart';
+import '../main.dart'; // Import global notifiers
 
 class AuthSelectionScreen extends StatelessWidget {
   const AuthSelectionScreen({super.key});
@@ -30,19 +31,21 @@ class AuthSelectionScreen extends StatelessWidget {
                   fontWeight: FontWeight.w900,
                   color: AppColors.primaryDark,
                 ),
-                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 50),
 
-              /// Login Button
+              // Login Button
               SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
                   onPressed: () {
+                    isGuestNotifier.value = false; // Mark as NOT guest
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => const LoginScreen(),
+                      ),
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -60,15 +63,18 @@ class AuthSelectionScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              /// Register Button
+              // Register Button
               SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
                   onPressed: () {
+                    isGuestNotifier.value = false; // Mark as NOT guest
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => const RegisterScreen(),
+                      ),
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -86,9 +92,11 @@ class AuthSelectionScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              /// Continue as Guest Button
+              // Guest Button
               TextButton(
                 onPressed: () {
+                  isGuestNotifier.value = true; // Mark as GUEST
+                  userNameNotifier.value = "User"; // Set generic name
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(builder: (context) => const HomeScreen()),

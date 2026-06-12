@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../utils/app_colors.dart';
 
-// TODO: Replace these with your real app store IDs
 const String _androidPackageId = 'com.yourcompany.solarm7';
 const String _iosAppId = '123456789';
 
@@ -15,38 +13,17 @@ class AppVersionScreen extends StatefulWidget {
   State<AppVersionScreen> createState() => _AppVersionScreenState();
 }
 
-class _AppVersionScreenState extends State<AppVersionScreen>
-    with SingleTickerProviderStateMixin {
-  String _version = '—';
-  String _buildNumber = '—';
+class _AppVersionScreenState extends State<AppVersionScreen> {
+  String _version = '1.0.0';
+  String _buildNumber = '1';
   bool _isChecking = false;
   String _updateStatus = 'idle'; // idle | upToDate | updateAvailable
-
-  // Simulated latest version from your server — replace with real API call
   final String _latestVersion = '1.0.0';
-
-  late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
 
   @override
   void initState() {
     super.initState();
     _loadPackageInfo();
-
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
-
-    _pulseAnimation = Tween<double>(begin: 0.85, end: 1.0).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadPackageInfo() async {
@@ -63,17 +40,13 @@ class _AppVersionScreenState extends State<AppVersionScreen>
       _isChecking = true;
       _updateStatus = 'idle';
     });
-
-    // Simulate network call to your update server
     await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
-
-    // Compare versions — replace with real server version fetch
-    final bool isUpToDate = _version == _latestVersion;
-
     setState(() {
       _isChecking = false;
-      _updateStatus = isUpToDate ? 'upToDate' : 'updateAvailable';
+      _updateStatus = _version == _latestVersion
+          ? 'upToDate'
+          : 'updateAvailable';
     });
   }
 
@@ -81,164 +54,218 @@ class _AppVersionScreenState extends State<AppVersionScreen>
     final Uri url = defaultTargetPlatform == TargetPlatform.iOS
         ? Uri.parse('https://apps.apple.com/app/id$_iosAppId')
         : Uri.parse(
-            'https://play.google.com/store/apps/details?id=$_androidPackageId');
-
+            'https://play.google.com/store/apps/details?id=$_androidPackageId',
+          );
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Could not open the store. Try again later.'),
-          backgroundColor: AppColors.warningRed,
+          backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppColors.bgLight,
-      appBar: AppBar(
-        backgroundColor: AppColors.bgLight,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: AppColors.primaryDark),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'App Version',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-            color: AppColors.primaryDark,
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+      backgroundColor: const Color(0xFFFFB800),
+      body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
-            const SizedBox(height: 10),
-
-            // Solar M7 Hero Card
-            _buildHeroCard(),
-            const SizedBox(height: 25),
-
-            // Version Info
-            _buildSectionHeader('VERSION INFO'),
-            _buildInfoRow(
-              icon: Icons.tag_rounded,
-              label: 'App Version',
-              value: 'v$_version',
+            // ── Gold AppBar ────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 6, 16, 14),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      color: Colors.black,
+                      size: 20,
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  const Text(
+                    'App Version',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 10),
-            _buildInfoRow(
-              icon: Icons.build_circle_outlined,
-              label: 'Build Number',
-              value: _buildNumber,
+
+            // ── White/Dark body ────────────────────────────────────
+            Expanded(
+              child: Container(
+                color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 40),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // ── VERSION INFO section ─────────────────
+                      _sectionLabel('VERSION INFO', isDark),
+                      const SizedBox(height: 10),
+
+                      _infoCard(
+                        isDark: isDark,
+                        icon: Icons.sell_outlined,
+                        label: 'App Version',
+                        value: 'v$_version',
+                      ),
+                      const SizedBox(height: 10),
+                      _infoCard(
+                        isDark: isDark,
+                        icon: Icons.pentagon_outlined,
+                        label: 'Build Number',
+                        value: _buildNumber,
+                      ),
+                      const SizedBox(height: 10),
+                      _infoCard(
+                        isDark: isDark,
+                        icon: Icons.smartphone_outlined,
+                        label: 'Platform',
+                        value: defaultTargetPlatform == TargetPlatform.iOS
+                            ? 'iOS'
+                            : 'Android',
+                      ),
+                      const SizedBox(height: 24),
+
+                      // ── Update Status Banner ─────────────────
+                      if (_updateStatus != 'idle') ...[
+                        _updateBanner(isDark),
+                        const SizedBox(height: 20),
+                      ],
+
+                      // ── Check for Updates button ─────────────
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: ElevatedButton.icon(
+                          onPressed: _isChecking ? null : _checkForUpdates,
+                          icon: _isChecking
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.sync_rounded,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                          label: Text(
+                            _isChecking ? 'Checking...' : 'Check for Updates',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFFB800),
+                            disabledBackgroundColor: const Color(
+                              0xFFFFB800,
+                            ).withValues(alpha: 0.6),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+
+                      // ── What's New ───────────────────────────
+                      _sectionLabel("WHAT'S NEW IN v$_version", isDark),
+                      const SizedBox(height: 10),
+                      _changelogCard(isDark),
+                    ],
+                  ),
+                ),
+              ),
             ),
-            const SizedBox(height: 10),
-            _buildInfoRow(
-              icon: Icons.smartphone_rounded,
-              label: 'Platform',
-              value: Theme.of(context).platform == TargetPlatform.android
-                  ? 'Android'
-                  : 'iOS',
-            ),
-            const SizedBox(height: 25),
-
-            // Update Status Banner
-            if (_updateStatus != 'idle') _buildUpdateBanner(),
-            if (_updateStatus != 'idle') const SizedBox(height: 25),
-
-            // Check for Updates Button
-            _buildCheckButton(),
-            const SizedBox(height: 25),
-
-            // What's New
-            _buildSectionHeader("WHAT'S NEW IN v$_version"),
-            _buildChangelogCard(),
-            const SizedBox(height: 80),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeroCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
-      decoration: BoxDecoration(
-        color: AppColors.primaryDark,
-        borderRadius: BorderRadius.circular(24),
+  Widget _sectionLabel(String title, bool isDark) => Padding(
+    padding: const EdgeInsets.only(bottom: 2),
+    child: Text(
+      title,
+      style: TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        color: isDark ? Colors.white38 : Colors.black38,
+        letterSpacing: 1.5,
       ),
-      child: Column(
+    ),
+  );
+
+  Widget _infoCard({
+    required bool isDark,
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF8F8F8),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.07)
+              : Colors.black.withValues(alpha: 0.06),
+        ),
+      ),
+      child: Row(
         children: [
-          // Animated sun/solar icon
-          ScaleTransition(
-            scale: _pulseAnimation,
-            child: Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: AppColors.primaryYellow,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primaryYellow.withValues(alpha: 0.4),
-                    blurRadius: 20,
-                    spreadRadius: 4,
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.wb_sunny_rounded,
-                color: AppColors.primaryDark,
-                size: 40,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Solar M7',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
-              letterSpacing: 1,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'v$_version  •  Build $_buildNumber',
-            style: const TextStyle(
-              fontSize: 13,
-              color: Colors.white54,
-            ),
-          ),
-          const SizedBox(height: 12),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
-              color: AppColors.successGreen.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                  color: AppColors.successGreen.withValues(alpha: 0.4)),
+              color: const Color(0xFFFFB800).withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: const Text(
-              '⚡ Powered by Clean Energy',
+            child: Icon(icon, color: const Color(0xFFFFB800), size: 18),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Text(
+              label,
               style: TextStyle(
-                color: AppColors.successGreen,
-                fontWeight: FontWeight.w700,
-                fontSize: 12,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: isDark ? Colors.white70 : Colors.black54,
               ),
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: isDark ? Colors.white : Colors.black,
             ),
           ),
         ],
@@ -246,7 +273,7 @@ class _AppVersionScreenState extends State<AppVersionScreen>
     );
   }
 
-  Widget _buildUpdateBanner() {
+  Widget _updateBanner(bool isDark) {
     final bool upToDate = _updateStatus == 'upToDate';
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),
@@ -254,23 +281,22 @@ class _AppVersionScreenState extends State<AppVersionScreen>
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: upToDate
-            ? AppColors.successGreen.withValues(alpha: 0.1)
-            : AppColors.primaryYellow.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(15),
+            ? const Color(0xFF4CAF50).withValues(alpha: 0.1)
+            : const Color(0xFFFFB800).withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: upToDate
-              ? AppColors.successGreen.withValues(alpha: 0.4)
-              : AppColors.primaryYellow.withValues(alpha: 0.5),
+              ? const Color(0xFF4CAF50).withValues(alpha: 0.35)
+              : const Color(0xFFFFB800).withValues(alpha: 0.45),
         ),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
-            upToDate
-                ? Icons.check_circle_rounded
-                : Icons.system_update_rounded,
-            color: upToDate ? AppColors.successGreen : AppColors.primaryYellow,
-            size: 28,
+            upToDate ? Icons.check_circle_rounded : Icons.system_update_rounded,
+            color: upToDate ? const Color(0xFF4CAF50) : const Color(0xFFFFB800),
+            size: 26,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -278,101 +304,75 @@ class _AppVersionScreenState extends State<AppVersionScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  upToDate ? 'You\'re up to date!' : 'Update Available',
+                  upToDate ? "You're up to date!" : 'Update Available',
                   style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
                     color: upToDate
-                        ? AppColors.successGreen
-                        : AppColors.primaryDark,
+                        ? const Color(0xFF4CAF50)
+                        : isDark
+                        ? Colors.white
+                        : Colors.black,
                   ),
                 ),
                 const SizedBox(height: 3),
                 Text(
                   upToDate
-                      ? 'Solar M7 is running the latest version.'
+                      ? 'Solar M7 is running smoothly on the latest version.'
                       : 'A new version v$_latestVersion is ready to install.',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.textSecondary,
+                    color: isDark ? Colors.white54 : Colors.black45,
                   ),
                 ),
               ],
             ),
           ),
-          if (!upToDate)
-            TextButton(
-              onPressed: () => _openStore(),
-              style: TextButton.styleFrom(
-                backgroundColor: AppColors.primaryYellow,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              ),
-              child: const Text(
-                'Update',
-                style: TextStyle(
-                  color: AppColors.primaryDark,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 12,
+          if (!upToDate) ...[
+            const SizedBox(width: 10),
+            GestureDetector(
+              onTap: _openStore,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFB800),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Text(
+                  'Update',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
                 ),
               ),
             ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildCheckButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: _isChecking ? null : _checkForUpdates,
-        icon: _isChecking
-            ? const SizedBox(
-                height: 18,
-                width: 18,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              )
-            : const Icon(Icons.cloud_sync_rounded, color: Colors.white),
-        label: Text(
-          _isChecking ? 'Checking...' : 'Check for Updates',
-          style: const TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 15,
-            color: Colors.white,
-          ),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primaryDark,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildChangelogCard() {
+  Widget _changelogCard(bool isDark) {
     final List<Map<String, String>> changelog = [
       {
         'icon': '🏠',
-        'title': 'System Details Screen',
-        'desc': 'View your Solar M7 kit status, battery & impact in real time.',
+        'title': 'System Details',
+        'desc': "View kit's status & battery real time.",
       },
       {
         'icon': '👤',
         'title': 'Profile Editing',
-        'desc': 'Update your name, email, phone and location from the app.',
+        'desc': 'Update your name, email & photo from the app.',
       },
       {
         'icon': '🔔',
         'title': 'Smart Notifications',
-        'desc': 'Get alerts for low battery, system faults & maintenance.',
+        'desc': 'Get alerts for low battery, faults & maintenance.',
       },
       {
         'icon': '⚡',
@@ -381,40 +381,64 @@ class _AppVersionScreenState extends State<AppVersionScreen>
       },
     ];
 
-    return Card(
-      color: AppColors.cardBg,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: changelog.map((item) {
-            final bool isLast = changelog.last == item;
-            return Column(
-              children: [
-                Row(
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF8F8F8),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.07)
+              : Colors.black.withValues(alpha: 0.06),
+        ),
+      ),
+      child: Column(
+        children: changelog.asMap().entries.map((entry) {
+          final i = entry.key;
+          final item = entry.value;
+          final bool isLast = i == changelog.length - 1;
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(item['icon']!, style: const TextStyle(fontSize: 22)),
-                    const SizedBox(width: 12),
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFB800).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Center(
+                        child: Text(
+                          item['icon']!,
+                          style: const TextStyle(fontSize: 18),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             item['title']!,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 14,
-                              color: AppColors.primaryDark,
+                              color: isDark ? Colors.white : Colors.black,
                             ),
                           ),
                           const SizedBox(height: 3),
                           Text(
                             item['desc']!,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: AppColors.textSecondary,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark ? Colors.white54 : Colors.black45,
                             ),
                           ),
                         ],
@@ -422,62 +446,19 @@ class _AppVersionScreenState extends State<AppVersionScreen>
                     ),
                   ],
                 ),
-                if (!isLast)
-                  const Divider(height: 24, color: AppColors.bgLight),
-              ],
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoRow({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    return Card(
-      color: AppColors.cardBg,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      elevation: 2,
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: AppColors.primaryYellow.withValues(alpha: 0.2),
-          child: Icon(icon, color: AppColors.primaryDark, size: 20),
-        ),
-        title: Text(
-          label,
-          style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
-        ),
-        trailing: Text(
-          value,
-          style: const TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 14,
-            color: AppColors.primaryDark,
-          ),
-        ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          title,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textSecondary,
-            letterSpacing: 1.5,
-          ),
-        ),
+              ),
+              if (!isLast)
+                Divider(
+                  height: 1,
+                  indent: 16,
+                  endIndent: 16,
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.07)
+                      : Colors.black.withValues(alpha: 0.06),
+                ),
+            ],
+          );
+        }).toList(),
       ),
     );
   }

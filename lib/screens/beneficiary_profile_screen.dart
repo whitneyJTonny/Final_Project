@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import '../utils/app_colors.dart';
 
 class BeneficiaryProfileScreen extends StatelessWidget {
@@ -8,49 +6,367 @@ class BeneficiaryProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: const Color(0xFFF8F9FA),
       body: CustomScrollView(
         slivers: [
-          _buildSliverAppBar(context),
+          // ── SLIVER APP BAR WITH HERO IMAGE ─────────────────────────
+          SliverAppBar(
+            expandedHeight: 280,
+            pinned: true,
+            backgroundColor: AppColors.primaryDark,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+            ),
+            flexibleSpace: FlexibleSpaceBar(
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Hero image
+                  Image.network(
+                    'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=800&q=80',
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      color: AppColors.primaryDark,
+                    ),
+                  ),
+                  // Gradient overlay
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.75),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // LIVE SYSTEM ONLINE badge
+                  Positioned(
+                    bottom: 20,
+                    left: 20,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.successGreen.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _PulsingDot(),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'LIVE SYSTEM ONLINE',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // ── SCROLLABLE CONTENT ──────────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildFamilyHeader(context, isDark)
-                      .animate()
-                      .fadeIn(duration: 400.ms)
-                      .slideY(begin: 0.1, end: 0),
-                  const SizedBox(height: 32),
-                  _buildImpactGrid(context, isDark)
-                      .animate()
-                      .fadeIn(delay: 100.ms, duration: 400.ms)
-                      .slideY(begin: 0.1, end: 0),
-                  const SizedBox(height: 40),
-                  _buildStorySection(context, isDark)
-                      .animate()
-                      .fadeIn(delay: 200.ms, duration: 400.ms)
-                      .slideY(begin: 0.1, end: 0),
-                  const SizedBox(height: 40),
-                  _buildHardwareSection(context, isDark)
-                      .animate()
-                      .fadeIn(delay: 300.ms, duration: 400.ms)
-                      .slideY(begin: 0.1, end: 0),
-                  const SizedBox(height: 40),
-                  _buildInstallationGallery(context)
-                      .animate()
-                      .fadeIn(delay: 400.ms, duration: 400.ms)
-                      .slideY(begin: 0.1, end: 0),
-                  const SizedBox(height: 40),
-                  _buildLocationMap(context, isDark)
-                      .animate()
-                      .fadeIn(delay: 500.ms, duration: 400.ms)
-                      .slideY(begin: 0.1, end: 0),
+
+                  // ── FAMILY HEADER ─────────────────────────────────
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          'The Ouma Family',
+                          style: TextStyle(
+                            fontSize: 30,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.primaryDark,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      // KIT ID badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.secondaryOrange.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: AppColors.secondaryOrange.withOpacity(0.3),
+                          ),
+                        ),
+                        child: const Text(
+                          'KIT ID: #SM7-992',
+                          style: TextStyle(
+                            color: AppColors.secondaryOrange,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: const [
+                      Icon(
+                        Icons.location_on_outlined,
+                        size: 15,
+                        color: Colors.grey,
+                      ),
+                      SizedBox(width: 4),
+                      Text(
+                        'Nakaseke District, Central Uganda',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 28),
+
+                  // ── IMPACT GRID ───────────────────────────────────
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildImpactCard(
+                          '6',
+                          'Residents',
+                          Icons.people_outline,
+                          Colors.blue,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildImpactCard(
+                          '4h',
+                          'Extra Study',
+                          Icons.menu_book_outlined,
+                          Colors.amber,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildImpactCard(
+                          '90%',
+                          'Cost Saved',
+                          Icons.trending_down,
+                          AppColors.successGreen,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 36),
+
+                  // ── FAMILY STORY ──────────────────────────────────
+                  const Text(
+                    'Family Story',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.primaryDark,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.grey.shade200),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.03),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Text(
+                      "Before the Solar M7 installation, the Ouma family relied on kerosene lamps which caused respiratory issues and limited study time for the three children. Now, their home is bright, safe, and connected. Mr. Ouma can even charge phones for neighbors, creating a small income for the family.",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.black87,
+                        height: 1.65,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 36),
+
+                  // ── INSIDE THE KIT ────────────────────────────────
+                  const Text(
+                    'Inside the Kit',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.primaryDark,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  _buildKitItem(
+                    Icons.wb_sunny_outlined,
+                    '20W Solar Panel',
+                    'High-efficiency monocrystalline',
+                  ),
+                  _buildKitItem(
+                    Icons.lightbulb_outline,
+                    '4x LED Bulbs',
+                    'Ultra-bright with individual switches',
+                  ),
+                  _buildKitItem(
+                    Icons.battery_charging_full_outlined,
+                    'Lithium Hub',
+                    '80Wh storage with USB ports',
+                  ),
+
+                  const SizedBox(height: 36),
+
+                  // ── INSTALLATION PHOTOS ───────────────────────────
+                  const Text(
+                    'Installation Photos',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.primaryDark,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildPhotoCard(
+                          'Dim Kerosene Glow',
+                          null, // no network image — shows red X placeholder
+                          isBefore: true,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: _buildPhotoCard(
+                          'Bright Solar M7',
+                          'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=400&q=80',
+                          isBefore: false,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 36),
+
+                  // ── PRECISE LOCATION ──────────────────────────────
+                  const Text(
+                    'Precise Location',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.primaryDark,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 36),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Colors.grey.shade200),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.03),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color:
+                                    AppColors.secondaryOrange.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.map_outlined,
+                                size: 32,
+                                color: AppColors.secondaryOrange,
+                              ),
+                            ),
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: Container(
+                                width: 14,
+                                height: 14,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.successGreen,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.location_on,
+                                  color: Colors.white,
+                                  size: 10,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        const Text(
+                          'Nakaseke, Uganda',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 16,
+                            color: AppColors.primaryDark,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          '0.7289° N, 32.4132° E',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
                   const SizedBox(height: 60),
                 ],
               ),
@@ -61,212 +377,24 @@ class BeneficiaryProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSliverAppBar(BuildContext context) {
-    return SliverAppBar(
-      expandedHeight: 300,
-      pinned: true,
-      stretch: true,
-      backgroundColor: AppColors.primaryDark,
-      leading: IconButton(
-        icon: const Icon(LucideIcons.arrowLeft, color: Colors.white),
-        onPressed: () => Navigator.pop(context),
-      ),
-      flexibleSpace: FlexibleSpaceBar(
-        background: Stack(
-          fit: StackFit.expand,
-          children: [
-            Image.asset('assets/family1.jpg', fit: BoxFit.cover),
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withValues(alpha: 0.85),
-                  ],
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: 20,
-              left: 20,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.successGreen.withValues(alpha: 0.9),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                          ),
-                        )
-                        .animate(onPlay: (controller) => controller.repeat())
-                        .scale(
-                          begin: const Offset(0.8, 0.8),
-                          end: const Offset(1.3, 1.3),
-                          duration: 1000.ms,
-                          curve: Curves.easeInOut,
-                        )
-                        .then()
-                        .scale(
-                          begin: const Offset(1.3, 1.3),
-                          end: const Offset(0.8, 0.8),
-                          duration: 1000.ms,
-                          curve: Curves.easeInOut,
-                        ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'LIVE SYSTEM ONLINE',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFamilyHeader(BuildContext context, bool isDark) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'The Ouma Family',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.w900,
-                color: Theme.of(context).textTheme.titleLarge?.color,
-                letterSpacing: -0.5,
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppColors.secondaryOrange.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppColors.secondaryOrange.withValues(alpha: 0.3),
-                ),
-              ),
-              child: const Text(
-                'KIT ID: #SM7-992',
-                style: TextStyle(
-                  color: AppColors.secondaryOrange,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 11,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Icon(
-              LucideIcons.mapPin,
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.textSecondary,
-              size: 16,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              'Nakaseke District, Central Uganda',
-              style: TextStyle(
-                fontSize: 16,
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildImpactGrid(BuildContext context, bool isDark) {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildImpactItem(
-            context,
-            '6',
-            'Residents',
-            LucideIcons.users,
-            Colors.blue,
-            isDark,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildImpactItem(
-            context,
-            '4h',
-            'Extra Study',
-            LucideIcons.bookOpen,
-            Colors.amber,
-            isDark,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildImpactItem(
-            context,
-            '90%',
-            'Cost Saved',
-            LucideIcons.trendingDown,
-            AppColors.successGreen,
-            isDark,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildImpactItem(
-    BuildContext context,
-    String val,
+  // ── IMPACT CARD ─────────────────────────────────────────────────────────────
+  Widget _buildImpactCard(
+    String value,
     String label,
     IconData icon,
     Color color,
-    bool isDark,
   ) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Theme.of(context).dividerColor.withValues(alpha: 0.15),
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -275,164 +403,72 @@ class BeneficiaryProfileScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
+              color: color.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: color, size: 24),
+            child: Icon(icon, color: color, size: 22),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Text(
-            val,
-            style: TextStyle(
-              fontSize: 22,
+            value,
+            style: const TextStyle(
+              fontSize: 20,
               fontWeight: FontWeight.w900,
-              color: Theme.of(context).textTheme.titleLarge?.color,
+              color: AppColors.primaryDark,
             ),
           ),
+          const SizedBox(height: 2),
           Text(
             label,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 11,
-              color: isDark
-                  ? AppColors.darkTextSecondary.withValues(alpha: 0.8)
-                  : AppColors.textSecondary,
-              fontWeight: FontWeight.w700,
+              color: Colors.grey,
+              fontWeight: FontWeight.w600,
             ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStorySection(BuildContext context, bool isDark) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Family Story',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
-            color: Theme.of(context).textTheme.titleLarge?.color,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: Theme.of(context).dividerColor.withValues(alpha: 0.15),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Text(
-            "Before the Solar M7 installation, the Ouma family relied on kerosene lamps which caused respiratory issues and limited study time for the three children. Now, their home is bright, safe, and connected. Mr. Ouma can even charge phones for neighbors, creating a small income for the family.",
-            style: TextStyle(
-              fontSize: 15,
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.textSecondary,
-              height: 1.6,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildHardwareSection(BuildContext context, bool isDark) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Inside the Kit',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
-            color: Theme.of(context).textTheme.titleLarge?.color,
-          ),
-        ),
-        const SizedBox(height: 16),
-        _buildHardwareItem(
-          context,
-          LucideIcons.sun,
-          '20W Solar Panel',
-          'High-efficiency monocrystalline',
-          isDark,
-        ),
-        _buildHardwareItem(
-          context,
-          LucideIcons.lightbulb,
-          '4x LED Bulbs',
-          'Ultra-bright with individual switches',
-          isDark,
-        ),
-        _buildHardwareItem(
-          context,
-          LucideIcons.battery,
-          'Lithium Hub',
-          '80Wh storage with USB ports',
-          isDark,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildHardwareItem(
-    BuildContext context,
-    IconData icon,
-    String title,
-    String desc,
-    bool isDark,
-  ) {
+  // ── KIT ITEM ─────────────────────────────────────────────────────────────────
+  Widget _buildKitItem(IconData icon, String title, String subtitle) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Theme.of(context).dividerColor.withValues(alpha: 0.15),
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(9),
             decoration: BoxDecoration(
-              color: AppColors.secondaryOrange.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              color: AppColors.secondaryOrange.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: AppColors.secondaryOrange, size: 20),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).textTheme.titleMedium?.color,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: AppColors.primaryDark,
                   ),
                 ),
+                const SizedBox(height: 2),
                 Text(
-                  desc,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isDark
-                        ? AppColors.darkTextSecondary.withValues(alpha: 0.8)
-                        : AppColors.textSecondary,
-                  ),
+                  subtitle,
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),
@@ -442,72 +478,35 @@ class BeneficiaryProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInstallationGallery(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Installation Photos',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
-            color: Theme.of(context).textTheme.titleLarge?.color,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _buildPhotoCard(
-                context,
-                'Dim Kerosene Glow',
-                'https://images.unsplash.com/photo-1606240724602-5b23f5724813?auto=format&fit=crop&q=80&w=400',
-                true,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildPhotoCard(
-                context,
-                'Bright Solar M7',
-                'https://images.unsplash.com/photo-1509099836639-18ba1795216d?auto=format&fit=crop&q=80&w=400',
-                false,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
+  // ── PHOTO CARD ───────────────────────────────────────────────────────────────
   Widget _buildPhotoCard(
-    BuildContext context,
     String label,
-    String imageUrl,
-    bool isBefore,
-  ) {
+    String? imageUrl, {
+    required bool isBefore,
+  }) {
     return Container(
-      height: 160,
+      height: 155,
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Theme.of(context).dividerColor.withValues(alpha: 0.15),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.grey.shade200),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.network(imageUrl, fit: BoxFit.cover),
+            // Image or red-X placeholder
+            if (imageUrl != null)
+              Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => _redXPlaceholder(),
+              )
+            else
+              _redXPlaceholder(),
+
+            // Dark gradient
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -515,46 +514,48 @@ class BeneficiaryProfileScreen extends StatelessWidget {
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.transparent,
-                    Colors.black.withValues(alpha: 0.85),
+                    Colors.black.withOpacity(0.75),
                   ],
                 ),
               ),
             ),
+
+            // Labels
             Positioned(
-              bottom: 12,
-              left: 12,
-              right: 12,
+              bottom: 10,
+              left: 10,
+              right: 10,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                      horizontal: 7,
+                      vertical: 3,
                     ),
                     decoration: BoxDecoration(
                       color: isBefore
-                          ? AppColors.warningRed.withValues(alpha: 0.8)
-                          : AppColors.successGreen.withValues(alpha: 0.8),
-                      borderRadius: BorderRadius.circular(8),
+                          ? Colors.red.withOpacity(0.85)
+                          : AppColors.successGreen.withOpacity(0.85),
+                      borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       isBefore ? 'BEFORE' : 'AFTER',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 9,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w900,
                         letterSpacing: 0.5,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 5),
                   Text(
                     label,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],
@@ -566,82 +567,72 @@ class BeneficiaryProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLocationMap(BuildContext context, bool isDark) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Precise Location',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
-            color: Theme.of(context).textTheme.titleLarge?.color,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Container(
-          height: 180,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: Theme.of(context).dividerColor.withValues(alpha: 0.15),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Stack(
-                alignment: Alignment.center,
-                children: const [
-                  Icon(
-                    LucideIcons.map,
-                    size: 36,
-                    color: AppColors.secondaryOrange,
-                  ),
-                  Positioned(
-                    top: 0,
-                    right: 0,
-                    child: Icon(
-                      Icons.location_on_rounded,
-                      size: 18,
-                      color: AppColors.successGreen,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Nakaseke, Uganda',
-                style: TextStyle(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 16,
-                  color: Theme.of(context).textTheme.titleMedium?.color,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                '0.7289° N, 32.4132° E',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.textSecondary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+  // Red X placeholder matching screenshot
+  Widget _redXPlaceholder() {
+    return Container(
+      color: Colors.grey.shade200,
+      child: CustomPaint(painter: _RedXPainter()),
     );
   }
+}
+
+// ── PULSING DOT ──────────────────────────────────────────────────────────────
+class _PulsingDot extends StatefulWidget {
+  @override
+  State<_PulsingDot> createState() => _PulsingDotState();
+}
+
+class _PulsingDotState extends State<_PulsingDot>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+    _anim = Tween<double>(begin: 0.6, end: 1.3).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: _anim,
+      child: Container(
+        width: 7,
+        height: 7,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+        ),
+      ),
+    );
+  }
+}
+
+// ── RED X PAINTER ─────────────────────────────────────────────────────────────
+class _RedXPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.red.withValues(alpha: 0.55)
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(Offset(0, 0), Offset(size.width, size.height), paint);
+    canvas.drawLine(Offset(size.width, 0), Offset(0, size.height), paint);
+  }
+
+  @override
+  bool shouldRepaint(_) => false;
 }

@@ -1,20 +1,21 @@
-from rest_framework import generics, permissions, status
-from rest_framework.response import Response
-from rest_framework.views import APIView
-
-from django.contrib.auth.models import User
-from rest_framework_simplejwt.tokens import RefreshToken
+import os
+import datetime
+import resend
+import random
 
 from django.core.mail import send_mail
-from django.utils.crypto import get_random_string
+from django.contrib.auth.models import User
 from django.conf import settings
+from django.utils import timezone
+
+from rest_framework import generics, permissions, status
+from rest_framework.views import APIView
+from rest_framework.response import Response
+
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .serializers import RegisterSerializer, UserSerializer
-
-
-# TEMP STORAGE (replace with DB later)
-RESET_TOKENS = {}
-OTP_STORE = {}
+from .models import PasswordResetOTP
 
 
 # =========================
@@ -29,14 +30,6 @@ class RegisterView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-
-        # Send mock SMS
-        phone = request.data.get('phone', '')
-        if phone:
-            print(f"==========================================")
-            print(f"SMS SENT TO: {phone}")
-            print(f"MESSAGE: Welcome to Solar M7, {user.first_name}! Your account has been successfully created.")
-            print(f"==========================================")
 
         refresh = RefreshToken.for_user(user)
 
@@ -61,84 +54,114 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
 
 
 # =========================
-# FORGOT PASSWORD
+# FORGOT PASSWORD (OTP)
 # =========================
 class ForgotPasswordView(APIView):
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
-        try:
-            email = request.data.get("email")
+        email = request.data.get("email", "").strip().lower()
 
-            if not email:
-                return Response(
-                    {"success": False, "message": "Email is required"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+        if not email:
+            return Response(
+                {"success": False, "error": "Email is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-            user = User.objects.filter(email=email).first()
+        user = User.objects.filter(email__iexact=email).first()
 
-            if user:
-                # generate 6-digit OTP
-                otp = str(get_random_string(6, allowed_chars="0123456789"))
-                OTP_STORE[email] = otp
-                print("OTP:", otp)
+        # Always return success (security reason)
+        if user:
+            PasswordResetOTP.objects.filter(email__iexact=email).delete()
 
+            # ✅ GUARANTEED 6-DIGIT OTP
+            otp = f"{random.randint(0, 999999):06d}"
+
+            PasswordResetOTP.objects.create(email=email, otp=otp)
+
+            print("==========================================")
+            print(f"OTP FOR {email}: {otp}")
+            print("==========================================")
+
+            email_sent = False
+
+            # ================= SMTP EMAIL =================
+            try:
                 send_mail(
-                    subject="Password Reset OTP",
-                    message=f"Your password reset OTP is: {otp}",
-                    from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@test.com"),
+                    subject="Solar M7 — Your Password Reset OTP",
+                    message=(
+                        f"Hi {user.first_name or 'User'},\n\n"
+                        f"Your OTP is: {otp}\n\n"
+                        f"It expires in 5 minutes.\n\n"
+                        f"If you didn't request this, ignore this email."
+                    ),
+                    from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[email],
-                    fail_silently=True,
+                    fail_silently=False,
                 )
+                print("[SMTP] OTP sent successfully")
+                email_sent = True
 
-            return Response(
-                {
-                    "success": True,
-                    "message": "If the email exists, an OTP has been sent."
-                },
-                status=status.HTTP_200_OK
-            )
+            except Exception as e:
+                print(f"[SMTP ERROR] {e}")
 
-        except Exception as e:
-            return Response(
-                {
-                    "success": False,
-                    "message": "Server error occurred",
-                    "error": str(e)
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            # ================= RESEND FALLBACK =================
+            if not email_sent:
+                try:
+                    resend.api_key = os.getenv("RESEND_API_KEY")
+
+                    resend.Emails.send({
+                        "from": "Solar M7 <onboarding@resend.dev>",
+                        "to": [email],
+                        "subject": "Solar M7 — Your OTP Code",
+                        "text": f"Your OTP is {otp}. It expires in 5 minutes."
+                    })
+
+                    print("[RESEND] OTP sent successfully")
+
+                except Exception as e:
+                    print(f"[RESEND ERROR] {e}")
+
+        return Response(
+            {"success": True, "message": "If the email exists, an OTP has been sent."},
+            status=status.HTTP_200_OK
+        )
 
 
 # =========================
-# VERIFY OTP (FIXED)
+# VERIFY OTP
 # =========================
 class VerifyOTPView(APIView):
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
-        email = request.data.get("email")
-        otp = request.data.get("otp")
+        email = request.data.get("email", "").strip().lower()
+        otp = request.data.get("otp", "").strip()
 
         if not email or not otp:
-            return Response({
-                "success": False,
-                "message": "Email and OTP are required"
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"success": False, "error": "Email and OTP required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        stored_otp = OTP_STORE.get(email)
+        record = PasswordResetOTP.objects.filter(email__iexact=email, otp=otp).first()
 
-        if stored_otp != otp:
-            return Response({
-                "success": False,
-                "message": "Invalid OTP"
-            }, status=status.HTTP_400_BAD_REQUEST)
+        if not record:
+            return Response(
+                {"success": False, "error": "Invalid OTP."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        return Response({
-            "success": True,
-            "message": "OTP verified successfully"
-        }, status=status.HTTP_200_OK)
+        expiry_seconds = getattr(settings, "OTP_EXPIRY_SECONDS", 300)
+
+        if timezone.now() - record.created_at > datetime.timedelta(seconds=expiry_seconds):
+            record.delete()
+            return Response(
+                {"success": False, "error": "OTP expired."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return Response({"success": True, "message": "OTP verified"})
 
 
 # =========================
@@ -148,44 +171,44 @@ class ResetPasswordView(APIView):
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
-        try:
-            email = request.data.get("email")
-            otp = request.data.get("otp")
-            password = request.data.get("password")
+        email = request.data.get("email", "").strip().lower()
+        otp = request.data.get("otp", "").strip()
+        password = request.data.get("password", "")
 
-            if not email or not otp or not password:
-                return Response(
-                    {"success": False, "message": "Email, OTP, and password are required"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            stored_otp = OTP_STORE.get(email)
-
-            if stored_otp != otp:
-                return Response(
-                    {"success": False, "message": "Invalid or expired OTP"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            user = User.objects.get(email=email)
-            user.set_password(password)
-            user.save()
-
-            del OTP_STORE[email]
-
+        if not email or not otp or not password:
             return Response(
-                {"success": True, "message": "Password reset successful"},
-                status=status.HTTP_200_OK
+                {"success": False, "error": "All fields required."},
+                status=status.HTTP_400_BAD_REQUEST
             )
 
-        except User.DoesNotExist:
+        if len(password) < 6:
             return Response(
-                {"success": False, "message": "User not found"},
+                {"success": False, "error": "Password too short."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        record = PasswordResetOTP.objects.filter(email__iexact=email, otp=otp).first()
+
+        if not record:
+            return Response(
+                {"success": False, "error": "Invalid OTP."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user = User.objects.filter(email__iexact=email).first()
+
+        if not user:
+            return Response(
+                {"success": False, "error": "User not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        except Exception as e:
-            return Response(
-                {"success": False, "message": "Server error", "error": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        user.set_password(password)
+        user.save()
+
+        record.delete()
+
+        return Response(
+            {"success": True, "message": "Password reset successful."},
+            status=status.HTTP_200_OK
+        )

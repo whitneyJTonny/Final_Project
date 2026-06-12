@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../utils/app_colors.dart';
 import '../widgets/bottom_nav_bar.dart';
 
@@ -8,8 +9,10 @@ class MaintenanceScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFFFFAF0),
       body: SafeArea(
         child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -17,17 +20,17 @@ class MaintenanceScreen extends StatelessWidget {
               // Header
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   Text(
                     'Maintenance',
-                    style: TextStyle(
+                    style: GoogleFonts.archivo(
                       fontSize: 28,
                       fontWeight: FontWeight.w900,
-                      color: AppColors.primaryDark,
+                      color: Theme.of(context).textTheme.titleLarge?.color ?? AppColors.primaryDark,
                     ),
                   ),
-                  SizedBox(height: 5),
-                  Text(
+                  const SizedBox(height: 5),
+                  const Text(
                     'System Care Schedule',
                     style: TextStyle(
                       fontSize: 14,
@@ -93,7 +96,7 @@ class MaintenanceScreen extends StatelessWidget {
           size: 32,
         ),
       ),
-      bottomNavigationBar: const BottomNavBar(currentIndex: 1),
+      bottomNavigationBar: const BottomNavBar(currentIndex: 2),
     );
   }
 
@@ -109,7 +112,7 @@ class MaintenanceScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.cardBg,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border(
           left: BorderSide(color: borderColor, width: 4),
@@ -135,7 +138,7 @@ class MaintenanceScreen extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
+                      style: GoogleFonts.archivo(
                         fontWeight: FontWeight.w700,
                         fontSize: 16,
                         color: AppColors.primaryDark,

@@ -1,308 +1,498 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import '../utils/app_colors.dart';
 import '../widgets/bottom_nav_bar.dart';
 import 'beneficiary_profile_screen.dart';
 
 class MonitoringScreen extends StatelessWidget {
-  const MonitoringScreen({super.key});
+  final String? kitId;
+  const MonitoringScreen({super.key, this.kitId});
 
   @override
   Widget build(BuildContext context) {
+    final bool isDetailView = kitId != null;
+
+    // Dynamically retrieve kit data from Hive offline_kits if available
+    Map<String, dynamic>? kitData;
+    if (isDetailView) {
+      final box = Hive.box('offline_kits');
+      final rawData = box.get(kitId);
+      if (rawData != null) {
+        kitData = Map<String, dynamic>.from(rawData as Map);
+      }
+    }
+    final String status = kitData?['status'] as String? ?? 'ACTIVE';
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F6F1),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFF8F6F1),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Track Your Impact',
-          style: TextStyle(
-            color: Colors.black87,
-            fontWeight: FontWeight.w800,
-            fontSize: 18,
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // KIT CARD
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1A1A1A),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Icon(
-                      Icons.wb_sunny_rounded,
-                      color: Color(0xFFFF9800),
-                      size: 24,
-                    ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          // ── App Bar ──
+          SliverAppBar(
+            pinned: true,
+            backgroundColor: Theme.of(context).cardColor,
+            elevation: 0,
+            expandedHeight: 0,
+            toolbarHeight: 68,
+            titleSpacing: 20,
+            automaticallyImplyLeading: false,
+            leading: isDetailView
+                ? IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                        color: AppColors.primaryDark, size: 20),
+                    onPressed: () => Navigator.pop(context),
+                  )
+                : null,
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  isDetailView ? 'Kit Details' : 'Monitor',
+                  style: GoogleFonts.dmSans(
+                    color: Colors.grey.shade500,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
                   ),
-                  const SizedBox(width: 14),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Kit #SM7-4921',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.black87,
-                        ),
+                ),
+                Text(
+                  isDetailView ? kitId! : 'Track Your Impact',
+                  style: GoogleFonts.archivo(
+                    color: AppColors.primaryDark,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 19,
+                  ),
+                ),
+              ],
+            ),
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(1),
+              child: Container(
+                height: 1,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white12
+                    : Colors.grey.shade100,
+              ),
+            ),
+          ),
+
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Kit Header Card ──
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF1C1400), Color(0xFF2D2200)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(Icons.location_on_outlined,
-                              size: 13, color: Colors.grey.shade500),
-                          const SizedBox(width: 3),
-                          Text(
-                            'Nakaseke District, Uganda',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade500,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFFF9800).withValues(alpha: 0.2),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFF9800).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: const Color(0xFFFF9800).withValues(alpha: 0.3),
                             ),
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // DEPLOYMENT STATUS
-            const Text(
-              'Deployment Status',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // TIMELINE
-            _buildTimeline(),
-
-            const SizedBox(height: 28),
-
-            // VIEW BENEFICIARY BUTTON
-            SizedBox(
-              width: double.infinity,
-              height: 54,
-              child: ElevatedButton.icon(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const BeneficiaryProfileScreen(),
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFF9800),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  elevation: 0,
-                ),
-                icon: const Icon(Icons.person_outline, size: 20),
-                label: const Text(
-                  'View Beneficiary Profile',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 28),
-
-            // OFFLINE TRACKING
-            const Text(
-              'Offline Tracking (Hive)',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'View kits you have funded ever without an Internet connection.',
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey.shade500,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 14),
-
-            // OFFLINE KIT ITEM
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF3E0),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.wb_sunny_outlined,
-                      color: Color(0xFFFF9800),
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'KIT-839913',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 14,
-                            color: Colors.black87,
+                          child: const Icon(Icons.solar_power_rounded,
+                              color: Color(0xFFFF9800), size: 24),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                kitId ?? 'Kit #SM7-4921',
+                                style: GoogleFonts.archivo(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Row(
+                                children: [
+                                  const Icon(Icons.location_on_rounded,
+                                      color: Color(0xFFFF9800), size: 13),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Nakaseke District, Uganda',
+                                    style: GoogleFonts.dmSans(
+                                      color: Colors.white54,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 3),
-                        Text(
-                          'Ush. 230,000 • Powers 1 Home',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade500,
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: (status == 'ACTIVE'
+                                    ? const Color(0xFF4CAF50)
+                                    : const Color(0xFFFF9800))
+                                .withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: (status == 'ACTIVE'
+                                      ? const Color(0xFF4CAF50)
+                                      : const Color(0xFFFF9800))
+                                  .withValues(alpha: 0.4),
+                            ),
+                          ),
+                          child: Text(
+                            status,
+                            style: GoogleFonts.dmSans(
+                              color: status == 'ACTIVE'
+                                  ? const Color(0xFF4CAF50)
+                                  : const Color(0xFFFF9800),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.5,
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        '2026-05-25',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey.shade400,
+
+                  const SizedBox(height: 28),
+
+                  // ── Deployment Status ──
+                  Text(
+                    'Deployment Status',
+                    style: GoogleFonts.archivo(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : AppColors.primaryDark,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+
+                  // Step tracker
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        _buildStep(context, 'Funded', isDone: true, isLast: false),
+                        _buildStep(context, 'Processing', isDone: true, isLast: false),
+                        _buildStep(context, 'Shipped', isDone: status == 'ACTIVE', isLast: false),
+                        _buildStep(context, 'Installed', isDone: status == 'ACTIVE', isLast: false),
+                        _buildStep(context, 'Verified', isDone: false, isLast: true),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 22),
+
+                  // ── Beneficiary Button ──
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton.icon(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const BeneficiaryProfileScreen()),
+                      ),
+                      icon: const Icon(Icons.person_rounded, size: 20),
+                      label: Text(
+                        'View Beneficiary Profile',
+                        style: GoogleFonts.archivo(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 15,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade50,
-                          borderRadius: BorderRadius.circular(6),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFFF9800),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
                         ),
-                        child: const Text(
-                          'OFFLINE',
-                          style: TextStyle(
-                            fontSize: 10,
+                      ),
+                    ),
+                  ),
+
+                  // ── Offline Kits ──
+                  if (!isDetailView) ...[
+                    const SizedBox(height: 32),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'My Funded Kits',
+                          style: GoogleFonts.archivo(
+                            fontSize: 17,
                             fontWeight: FontWeight.w800,
-                            color: Colors.red,
-                            letterSpacing: 0.5,
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.white
+                                : AppColors.primaryDark,
                           ),
                         ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            'OFFLINE',
+                            style: GoogleFonts.dmSans(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Available without internet connection.',
+                      style: GoogleFonts.dmSans(
+                          fontSize: 12, color: Colors.grey.shade500),
+                    ),
+                    const SizedBox(height: 14),
+                    ValueListenableBuilder(
+                      valueListenable: Hive.box('offline_kits').listenable(),
+                      builder: (context, Box box, _) {
+                        final kits = box.values.toList().reversed.toList();
+                        if (kits.isEmpty) {
+                          return Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(20.0),
+                              child: Text(
+                                'No kits funded yet.',
+                                style: GoogleFonts.dmSans(color: Colors.grey),
+                              ),
+                            ),
+                          );
+                        }
+                        return ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: kits.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 10),
+                          itemBuilder: (context, index) {
+                            final kit = Map<String, dynamic>.from(kits[index] as Map);
+                            return _buildOfflineKitCard(
+                              context,
+                              kitId: kit['kitId'] as String,
+                              date: kit['date'] as String,
+                              amount: kit['amount'] as String,
+                              impact: kit['impact'] as String,
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ],
+
+                  const SizedBox(height: 100),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar:
+          isDetailView ? null : const BottomNavBar(currentIndex: 1),
+    );
+  }
+
+  Widget _buildStep(BuildContext context, String title,
+      {required bool isDone, required bool isLast}) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Column(
+          children: [
+            Container(
+              width: 26,
+              height: 26,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isDone ? const Color(0xFF4CAF50) : Theme.of(context).cardColor,
+                border: isDone
+                    ? null
+                    : Border.all(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white24
+                            : Colors.grey.shade300,
+                        width: 2,
                       ),
-                    ],
+                boxShadow: isDone
+                    ? [
+                        BoxShadow(
+                          color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: isDone
+                  ? const Icon(Icons.check_rounded,
+                      color: Colors.white, size: 15)
+                  : null,
+            ),
+            if (!isLast)
+              Container(
+                width: 2,
+                height: 36,
+                decoration: BoxDecoration(
+                  gradient: isDone
+                      ? const LinearGradient(
+                          colors: [Color(0xFF4CAF50), Color(0xFF81C784)],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        )
+                      : null,
+                  color: isDone
+                      ? null
+                      : (Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white24
+                          : Colors.grey.shade200),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(width: 16),
+        Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            title,
+            style: GoogleFonts.dmSans(
+              fontSize: 15,
+              fontWeight: isDone ? FontWeight.w700 : FontWeight.w500,
+              color: isDone
+                  ? (Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : AppColors.primaryDark)
+                  : Colors.grey.shade400,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOfflineKitCard(
+    BuildContext context, {
+    required String kitId,
+    required String date,
+    required String amount,
+    required String impact,
+  }) {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => MonitoringScreen(kitId: kitId)),
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF9800).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.solar_power_rounded,
+                  color: Color(0xFFFF9800), size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    kitId,
+                    style: GoogleFonts.archivo(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : AppColors.primaryDark,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    '$amount • $impact',
+                    style: GoogleFonts.dmSans(
+                        color: Colors.grey.shade500, fontSize: 12),
                   ),
                 ],
               ),
             ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  date,
+                  style: GoogleFonts.dmSans(
+                      fontSize: 11, color: Colors.grey.shade400),
+                ),
+                const SizedBox(height: 5),
+                const Icon(Icons.chevron_right_rounded,
+                    color: Colors.grey, size: 20),
+              ],
+            ),
           ],
         ),
       ),
-      bottomNavigationBar: const BottomNavBar(currentIndex: 1),
-    );
-  }
-
-  Widget _buildTimeline() {
-    final steps = [
-      {'label': 'Funded', 'done': true},
-      {'label': 'Processing', 'done': true},
-      {'label': 'Shipped', 'done': true},
-      {'label': 'Installed', 'done': true},
-      {'label': 'Verified', 'done': false},
-    ];
-
-    return Column(
-      children: List.generate(steps.length, (i) {
-        final done = steps[i]['done'] as bool;
-        final isLast = i == steps.length - 1;
-
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // LINE + DOT
-            Column(
-              children: [
-                Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: done ? const Color(0xFF4CAF50) : Colors.white,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: done
-                          ? const Color(0xFF4CAF50)
-                          : Colors.grey.shade300,
-                      width: 2,
-                    ),
-                  ),
-                  child: done
-                      ? const Icon(Icons.check, color: Colors.white, size: 14)
-                      : null,
-                ),
-                if (!isLast)
-                  Container(
-                    width: 2,
-                    height: 32,
-                    color: done
-                        ? const Color(0xFF4CAF50)
-                        : Colors.grey.shade200,
-                  ),
-              ],
-            ),
-            const SizedBox(width: 14),
-            Padding(
-              padding: const EdgeInsets.only(top: 5),
-              child: Text(
-                steps[i]['label'] as String,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: done ? Colors.black87 : Colors.grey.shade400,
-                ),
-              ),
-            ),
-          ],
-        );
-      }),
     );
   }
 }

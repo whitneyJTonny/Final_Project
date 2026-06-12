@@ -1,163 +1,380 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../utils/app_colors.dart';
+import 'monitoring_screen.dart';
+import 'edit_profile_screen.dart';
+import '../widgets/bottom_nav_bar.dart';
+import '../main.dart';
 
-class ImpactReportScreen extends StatelessWidget {
-  const ImpactReportScreen({super.key});
+class ImpactProfileScreen extends StatelessWidget {
+  const ImpactProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: theme.scaffoldBackgroundColor,
-        foregroundColor: theme.textTheme.titleLarge?.color,
-        title: const Text('Impact Stories'),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'See The Change',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).textTheme.titleLarge?.color,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Real stories from communities powered by Solar M7.',
-              style: TextStyle(
-                fontSize: 16,
-                color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
-              ),
-            ),
-            const SizedBox(height: 32),
-            
-            // Impact Story 1
-            _buildStoryCard(
-              context: context,
-              imageUrl: 'https://images.unsplash.com/photo-1542810634-71277d95dcbb?auto=format&fit=crop&q=80&w=800',
-              title: "Grace's children now study 3 extra hours per night",
-              village: 'Kiboga District',
-              quote: '"Before Solar M7, we spent heavily on kerosene and the smoke made my children cough. Now, they study safely under bright light."',
-              impacts: ['3 hrs extra study time', 'Saved \$15/month on kerosene'],
-            ),
-            
-            const SizedBox(height: 24),
-            
-            // Impact Story 2
-            _buildStoryCard(
-              context: context,
-              imageUrl: 'https://images.unsplash.com/photo-1531206715517-5c0ba140b2b8?auto=format&fit=crop&q=80&w=800',
-              title: "A new clinic powered 24/7",
-              village: 'Gulu District',
-              quote: '"We can now deliver babies safely at night and refrigerate crucial vaccines. The solar system changed everything."',
-              impacts: ['24/7 Maternity Care', 'Vaccine refrigeration'],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-  Widget _buildStoryCard({
-    required BuildContext context,
-    required String imageUrl,
-    required String title,
-    required String village,
-    required String quote,
-    required List<String> impacts,
-  }) {
-    final theme = Theme.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: theme.brightness == Brightness.dark ? 0.2 : 0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 200,
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-              image: DecorationImage(
-                image: NetworkImage(imageUrl),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(20),
+    return ValueListenableBuilder<String>(
+      valueListenable: userNameNotifier,
+      builder: (context, name, _) {
+        return Scaffold(
+          backgroundColor: const Color(0xFFFFB800),
+          body: SafeArea(
+            bottom: false,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Icon(LucideIcons.mapPin, size: 14, color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7)),
-                    const SizedBox(width: 4),
-                    Text(
-                      village,
-                      style: TextStyle(
-                        color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: theme.textTheme.titleLarge?.color,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryYellow.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.primaryYellow.withValues(alpha: 0.3)),
-                  ),
-                  child: Text(
-                    quote,
-                    style: TextStyle(
-                      fontStyle: FontStyle.italic,
-                      color: theme.brightness == Brightness.dark ? AppColors.primaryYellow : AppColors.trustBlue,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                ...impacts.map((impact) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
+                // ── Gold AppBar ────────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 6, 8, 14),
                   child: Row(
                     children: [
-                      const Icon(LucideIcons.checkCircle2, color: AppColors.secondaryGreen, size: 16),
-                      const SizedBox(width: 8),
-                      Text(impact, style: TextStyle(color: theme.textTheme.bodyMedium?.color, fontWeight: FontWeight.w500)),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          color: Colors.black,
+                          size: 20,
+                        ),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                      const Expanded(
+                        child: Text(
+                          'My Impact Profile',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                      // Edit pencil icon in dark circle
+                      GestureDetector(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const EditProfileScreen(),
+                          ),
+                        ),
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          margin: const EdgeInsets.only(right: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.18),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            LucideIcons.edit3,
+                            color: Colors.black,
+                            size: 18,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                )),
+                ),
+
+                // ── White/Dark body ────────────────────────────────────
+                Expanded(
+                  child: Container(
+                    color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // ── User Header ──────────────────────────
+                          Row(
+                            children: [
+                              // Avatar circle
+                              ValueListenableBuilder<String?>(
+                                valueListenable: userPhotoNotifier,
+                                builder: (context, photoPath, _) => Container(
+                                  width: 70,
+                                  height: 70,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: const Color(
+                                      0xFFFFB800,
+                                    ).withValues(alpha: 0.25),
+                                    border: Border.all(
+                                      color: const Color(0xFFFFB800),
+                                      width: 2.5,
+                                    ),
+                                    image: photoPath != null
+                                        ? DecorationImage(
+                                            image: FileImage(File(photoPath)),
+                                            fit: BoxFit.cover,
+                                          )
+                                        : null,
+                                  ),
+                                  child: photoPath == null
+                                      ? Center(
+                                          child: Text(
+                                            _initials(name),
+                                            style: const TextStyle(
+                                              fontSize: 22,
+                                              fontWeight: FontWeight.w800,
+                                              color: Color(0xFFFFB800),
+                                            ),
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    name,
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w800,
+                                      color: isDark
+                                          ? Colors.white
+                                          : Colors.black,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Changemaker since 2024',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: isDark
+                                          ? Colors.white54
+                                          : Colors.black45,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+
+                          // ── Dark Stats Bar ───────────────────────
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 18,
+                              horizontal: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1A1A2E),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                _statCol(
+                                  '3',
+                                  'Kits Funded',
+                                  const Color(0xFFFFB800),
+                                ),
+                                Container(
+                                  width: 1,
+                                  height: 36,
+                                  color: Colors.white24,
+                                ),
+                                _statCol(
+                                  '18',
+                                  'Lives Impacted',
+                                  const Color(0xFF4CAF50),
+                                ),
+                                Container(
+                                  width: 1,
+                                  height: 36,
+                                  color: Colors.white24,
+                                ),
+                                _statCol('\$180', 'Total', Colors.white),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 28),
+
+                          // ── Donation History ─────────────────────
+                          Text(
+                            'Donation History',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: isDark ? Colors.white : Colors.black,
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+
+                          _historyCard(
+                            context: context,
+                            isDark: isDark,
+                            amount: '\$60',
+                            kitId: 'Kit #SM7-4921',
+                            date: 'April 28, 2026',
+                            status: 'Installed',
+                            statusColor: const Color(0xFF4CAF50),
+                          ),
+                          const SizedBox(height: 10),
+                          _historyCard(
+                            context: context,
+                            isDark: isDark,
+                            amount: '\$60',
+                            kitId: 'Kit #SM7-3100',
+                            date: 'February 10, 2026',
+                            status: 'Installed',
+                            statusColor: const Color(0xFF4CAF50),
+                          ),
+                          const SizedBox(height: 10),
+                          _historyCard(
+                            context: context,
+                            isDark: isDark,
+                            amount: '\$60',
+                            kitId: 'Kit #SM7-2501',
+                            date: 'December 25, 2025',
+                            status: 'Shipped',
+                            statusColor: const Color(0xFFFFB800),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
-        ],
+          bottomNavigationBar: const BottomNavBar(currentIndex: 3),
+        );
+      },
+    );
+  }
+
+  String _initials(String name) {
+    final parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    }
+    if (parts.isNotEmpty && parts[0].isNotEmpty) {
+      return parts[0][0].toUpperCase();
+    }
+    return 'U';
+  }
+
+  Widget _statCol(String value, String label, Color valueColor) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            color: valueColor,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white60, fontSize: 11),
+        ),
+      ],
+    );
+  }
+
+  Widget _historyCard({
+    required BuildContext context,
+    required bool isDark,
+    required String amount,
+    required String kitId,
+    required String date,
+    required String status,
+    required Color statusColor,
+  }) {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => MonitoringScreen(kitId: kitId)),
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withOpacity(0.07)
+                : Colors.black.withOpacity(0.07),
+          ),
+        ),
+        child: Row(
+          children: [
+            // Icon box
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFB800).withOpacity(0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                LucideIcons.receipt,
+                color: Color(0xFFFFB800),
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 14),
+            // Details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        amount,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 17,
+                          color: isDark ? Colors.white : Colors.black,
+                        ),
+                      ),
+                      Text(
+                        date,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isDark ? Colors.white38 : Colors.black38,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        kitId,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: isDark ? Colors.white60 : Colors.black54,
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Icon(Icons.circle, size: 7, color: statusColor),
+                          const SizedBox(width: 4),
+                          Text(
+                            '• $status',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: statusColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

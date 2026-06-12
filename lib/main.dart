@@ -2,39 +2,88 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'utils/app_colors.dart';
-import 'screens/splash_screen.dart'; // ✅ FIXED: was 'downloads/splash_screen.dart'
+import 'screens/splash_screen.dart';
 
-// GLOBAL NOTIFIERS
+// ─────────────────────────────
+// GLOBAL NOTIFIERS (UNCHANGED)
+// ─────────────────────────────
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.light);
-final ValueNotifier<bool> isGuestNotifier = ValueNotifier(false);
-final ValueNotifier<String> userNameNotifier = ValueNotifier(
-  'Whitney Josephin',
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+final ValueNotifier<bool> isGuestNotifier = ValueNotifier(true);
+
+final ValueNotifier<String> userNameNotifier = ValueNotifier('User');
+
+final ValueNotifier<String> userEmailNotifier = ValueNotifier('');
+
+final ValueNotifier<String> userBioNotifier = ValueNotifier(
+  'Passionate about bringing clean energy to rural Africa.',
 );
-final ValueNotifier<String> userEmailNotifier = ValueNotifier(
-  'whitneyj@example.com',
-);
+
 final ValueNotifier<String?> userImagePathNotifier = ValueNotifier<String?>(
   null,
 );
 
+final ValueNotifier<String?> userPhotoNotifier = ValueNotifier<String?>(null);
+
+/// ─────────────────────────────
+/// THEME STORAGE KEYS
+/// ─────────────────────────────
+const String _settingsBox = 'settings';
+const String _themeKey = 'theme_mode';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  try {
-    await Hive.initFlutter();
+  await Hive.initFlutter();
+  final offlineKitsBox = await Hive.openBox('offline_kits');
+  if (offlineKitsBox.isEmpty) {
+    await offlineKitsBox.putAll({
+      'KIT-538913': {
+        'kitId': 'KIT-538913',
+        'date': '2026-05-25',
+        'amount': 'Ush. 230,000',
+        'impact': 'Powers 1 Home',
+        'status': 'ACTIVE',
+      },
+      'KIT-229041': {
+        'kitId': 'KIT-229041',
+        'date': '2026-04-10',
+        'amount': 'Ush. 1,150,000',
+        'impact': 'Powers 5 Homes',
+        'status': 'ACTIVE',
+      },
+    });
+  }
 
-    await Hive.openBox('offline_kits');
+  // ───── LOAD THEME FROM HIVE ─────
+  final settings = await Hive.openBox(_settingsBox);
+  final savedTheme = settings.get(_themeKey, defaultValue: 'light');
+
+  themeNotifier.value = savedTheme == 'dark' ? ThemeMode.dark : ThemeMode.light;
+
+  try {
     final profileBox = await Hive.openBox('user_profile');
 
-    userNameNotifier.value = profileBox.get(
-      'name',
-      defaultValue: 'Whitney Josephin',
-    );
-    userEmailNotifier.value = profileBox.get(
-      'email',
-      defaultValue: 'whitneyj@example.com',
-    );
-    userImagePathNotifier.value = profileBox.get('image_path');
+    final savedName = profileBox.get('name');
+    final savedEmail = profileBox.get('email');
+
+    if (savedName != null && savedName.toString().isNotEmpty) {
+      isGuestNotifier.value = false;
+      userNameNotifier.value = savedName.toString();
+      userEmailNotifier.value = savedEmail?.toString() ?? '';
+
+      userBioNotifier.value =
+          profileBox.get(
+                'bio',
+                defaultValue:
+                    'Passionate about bringing clean energy to rural Africa.',
+              )
+              as String;
+
+      userImagePathNotifier.value = profileBox.get('image_path');
+      userPhotoNotifier.value = profileBox.get('image_path');
+    }
   } catch (e) {
     debugPrint('Hive init error: $e');
   }
@@ -51,44 +100,39 @@ class SolarApp extends StatelessWidget {
       valueListenable: themeNotifier,
       builder: (context, mode, _) {
         return MaterialApp(
+          navigatorKey: navigatorKey,
           debugShowCheckedModeBanner: false,
           title: 'Solar M7',
+
           themeMode: mode,
 
           // ☀️ LIGHT THEME
           theme: ThemeData(
             brightness: Brightness.light,
-            primaryColor: AppColors.primaryYellow,
-            scaffoldBackgroundColor: AppColors.bgLight,
-            cardColor: AppColors.cardBg,
             useMaterial3: true,
-            textTheme: GoogleFonts.interTextTheme().apply(
-              bodyColor: Colors.black,
-              displayColor: Colors.black,
+            scaffoldBackgroundColor: const Color(0xFFF5F5F5),
+            primaryColor: AppColors.primaryYellow,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: AppColors.primaryYellow,
+              brightness: Brightness.light,
             ),
-            inputDecorationTheme: const InputDecorationTheme(
-              hintStyle: TextStyle(color: Colors.grey),
-            ),
+            textTheme: GoogleFonts.interTextTheme(),
           ),
 
           // 🌙 DARK THEME
           darkTheme: ThemeData(
             brightness: Brightness.dark,
-            primaryColor: AppColors.primaryYellow,
-            scaffoldBackgroundColor: AppColors.darkScaffoldBg,
-            cardColor: AppColors.darkCardBg,
             useMaterial3: true,
-            textTheme: GoogleFonts.interTextTheme(
-              ThemeData.dark().textTheme,
-            ).apply(bodyColor: Colors.white, displayColor: Colors.white),
-            inputDecorationTheme: const InputDecorationTheme(
-              hintStyle: TextStyle(color: Colors.white70),
-              labelStyle: TextStyle(color: Colors.white),
+            scaffoldBackgroundColor: const Color(0xFF121212),
+            primaryColor: AppColors.primaryYellow,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: AppColors.primaryYellow,
+              brightness: Brightness.dark,
             ),
-            iconTheme: const IconThemeData(color: Colors.white70),
+            textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
           ),
 
-          home: SplashScreen(),
+          home: const SplashScreen(),
         );
       },
     );

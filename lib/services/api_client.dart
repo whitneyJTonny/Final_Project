@@ -10,20 +10,38 @@ class ApiClient {
   ApiClient._internal();
 
   final _storage = const FlutterSecureStorage();
-  
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // ✅ CHANGE THIS IP to your computer's local IP address
+  //    → On Windows: open CMD and run "ipconfig"
+  //      look for "IPv4 Address" under your WiFi adapter
+  //      e.g. 192.168.1.105
+  //    → Your phone and computer must be on the SAME WiFi network
+  //    → Run Django with: python manage.py runserver 0.0.0.0:8000
+  // ─────────────────────────────────────────────────────────────────────────
+  static const String _localIp = '192.168.1.105'; // <-- REPLACE THIS
+
   String get baseUrl {
     if (kIsWeb) {
       return 'http://localhost:8000/api';
-    } else {
-      try {
-        if (io.Platform.isAndroid) {
-          return 'http://10.0.2.2:8000/api';
-        }
-      } catch (e) {
-        // Fallback for standard environments
-      }
-      return 'http://localhost:8000/api';
     }
+    try {
+      if (io.Platform.isAndroid) {
+        // Android emulator → 10.0.2.2 maps to your computer's localhost
+        // Android real device → use your computer's local IP
+        return kDebugMode
+            ? 'http://$_localIp:8000/api' // real device (debug)
+            : 'http://$_localIp:8000/api'; // real device (release)
+      }
+      if (io.Platform.isIOS) {
+        // iOS simulator → localhost works fine
+        // iOS real device → use your computer's local IP
+        return 'http://$_localIp:8000/api';
+      }
+    } catch (e) {
+      debugPrint('Platform detection error: $e');
+    }
+    return 'http://$_localIp:8000/api';
   }
 
   Future<String?> getAccessToken() async {
@@ -56,7 +74,12 @@ class ApiClient {
     return _sendRequest('PUT', path, body: body);
   }
 
-  Future<http.Response> _sendRequest(String method, String path, {Map<String, dynamic>? body, bool isRetry = false}) async {
+  Future<http.Response> _sendRequest(
+    String method,
+    String path, {
+    Map<String, dynamic>? body,
+    bool isRetry = false,
+  }) async {
     final url = Uri.parse('$baseUrl$path');
     final accessToken = await getAccessToken();
 
@@ -84,7 +107,6 @@ class ApiClient {
     }
 
     if (response.statusCode == 401 && !isRetry) {
-      // Access token expired, attempt to refresh
       final refreshed = await _refreshTokens();
       if (refreshed) {
         return _sendRequest(method, path, body: body, isRetry: true);
@@ -109,7 +131,7 @@ class ApiClient {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final newAccess = data['access'];
-        final newRefresh = data['refresh'] ?? refreshToken; // simplejwt can rotate refresh tokens
+        final newRefresh = data['refresh'] ?? refreshToken;
         await saveTokens(newAccess, newRefresh);
         return true;
       }

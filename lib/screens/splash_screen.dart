@@ -11,36 +11,43 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _bgFadeAnimation;
-  bool _showBg = false;
+  late AnimationController _bounceController;
+  late Animation<double> _bounceAnimation;
+
+  bool _showBackground = false;
 
   @override
   void initState() {
     super.initState();
 
-    _controller = AnimationController(
+    // ── Bounce animation (UNCHANGED)
+    _bounceController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 900),
     );
 
-    _bgFadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
+    _bounceAnimation = Tween<double>(begin: 0.0, end: -18.0).animate(
+      CurvedAnimation(parent: _bounceController, curve: Curves.easeInOut),
+    );
 
-    Timer(const Duration(milliseconds: 1500), () {
-      if (mounted) {
-        setState(() => _showBg = true);
-        _controller.forward();
-      }
+    _bounceController.repeat(reverse: true);
+
+    // ── Stage switch
+    Timer(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _showBackground = true);
     });
 
-    Timer(const Duration(milliseconds: 3500), () {
+    // ── Navigate
+    Timer(const Duration(seconds: 5), () {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) => const OnboardingScreen(),
+            transitionsBuilder: (_, anim, __, child) =>
+                FadeTransition(opacity: anim, child: child),
+            transitionDuration: const Duration(milliseconds: 700),
+          ),
         );
       }
     });
@@ -48,7 +55,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
-    _controller.dispose();
+    _bounceController.dispose();
     super.dispose();
   }
 
@@ -59,50 +66,125 @@ class _SplashScreenState extends State<SplashScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          if (_showBg)
-            FadeTransition(
-              opacity: _bgFadeAnimation,
-              child: Image.asset(
-                'assets/demo1.jpg',
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(color: Colors.black),
-              ),
+          // ── BACKGROUND ──
+          AnimatedOpacity(
+            opacity: _showBackground ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 1000),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.asset(
+                  'assets/demo3.jpg',
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(color: Colors.black),
+                ),
+                Container(color: Colors.black.withOpacity(0.55)),
+              ],
             ),
-          if (_showBg)
-            FadeTransition(
-              opacity: _bgFadeAnimation,
-              child: Container(color: Colors.black.withValues(alpha: 0.30)),
-            ),
+          ),
+
+          // ── CENTER CONTENT ──
           Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: 155,
-                  height: 155,
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.82),
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  alignment: Alignment.center,
-                  child: const Text(
-                    "SOLAR M7",
-                    style: TextStyle(
-                      color: Color(0xFFFFC107),
-                      fontSize: 26,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 2,
+                // ── BOUNCING CARD ──
+                AnimatedBuilder(
+                  animation: _bounceAnimation,
+                  builder: (context, child) {
+                    return Transform.translate(
+                      offset: Offset(0, _bounceAnimation.value),
+                      child: child,
+                    );
+                  },
+
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 900),
+                    width: 165,
+                    height: 165,
+                    decoration: BoxDecoration(
+                      // 🔥 CLEAN PREMIUM BLACK TONE
+                      color: _showBackground
+                          ? Colors.black.withOpacity(0.45)
+                          : const Color(0xFF120D00),
+
+                      // 🔥 MATCHES YOUR IMAGE (MORE ROUNDED)
+                      borderRadius: BorderRadius.circular(26),
+
+                      // 🔥 SOFT GOLD BORDER
+                      border: Border.all(
+                        color: _showBackground
+                            ? Colors.transparent
+                            : const Color(0xFFFFB300).withOpacity(0.55),
+                        width: 1.2,
+                      ),
+
+                      // 🔥 SUBTLE GLOW (REAL APP LOOK)
+                      boxShadow: _showBackground
+                          ? [
+                              BoxShadow(
+                                color: const Color(
+                                  0xFFFFB300,
+                                ).withOpacity(0.10),
+                                blurRadius: 25,
+                                spreadRadius: 1,
+                              ),
+                            ]
+                          : [
+                              BoxShadow(
+                                color: const Color(
+                                  0xFFFFB300,
+                                ).withOpacity(0.28),
+                                blurRadius: 35,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                    ),
+
+                    child: const Center(
+                      child: Text(
+                        'SOLAR M7',
+                        style: TextStyle(
+                          color: Color(0xFFFFC107),
+                          fontSize: 26,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 2.5,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
-                const Text(
-                  "LET THERE BE LIGHT",
-                  style: TextStyle(
-                    color: Color(0x99FFFFFF),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 4,
+
+                const SizedBox(height: 32),
+
+                // ── TAGLINE ──
+                AnimatedOpacity(
+                  opacity: _showBackground ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 800),
+                  child: const Text(
+                    'LET THERE BE LIGHT',
+                    style: TextStyle(
+                      color: Color(0xFFFFC107),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w400,
+                      letterSpacing: 5,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 30),
+
+                // ── LOADING SPINNER ──
+                AnimatedOpacity(
+                  opacity: _showBackground ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 800),
+                  child: const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      color: Color(0xFFFF9800),
+                      strokeWidth: 2,
+                    ),
                   ),
                 ),
               ],
